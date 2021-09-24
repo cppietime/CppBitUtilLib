@@ -360,6 +360,16 @@ namespace Huffman {
             returns true if a symbol was found
             */
             bool read(BitBuffer::BitBufferIn& buffer, int& output);
+            
+            /*
+            returns a vector of the number of symbols of each code length
+            */
+            std::vector<size_t> lengthCounts();
+            
+            /*
+            returns the symbols in order of each length
+            */
+            std::vector<std::vector<int>> orderedSymbols();
     };
     
     /*
@@ -369,7 +379,7 @@ namespace Huffman {
         private:
             std::string message;
         public:
-            HuffmanException(std::string message) : message{message} {};
+            HuffmanException(std::string message) : message{message} {}
             virtual const char* what();
     };
     

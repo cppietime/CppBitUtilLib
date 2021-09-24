@@ -204,6 +204,29 @@ bool Huffman::HuffmanCode::read(BitBuffer::BitBufferIn& buffer, int& output)
     return false;
 }
 
+std::vector<size_t> Huffman::HuffmanCode::lengthCounts()
+{
+    std::vector<size_t> ret;
+    for (auto it = decode.begin(); it != decode.end(); it++) {
+        ret.push_back(it->size());
+    }
+    return ret;
+}
+
+std::vector<std::vector<int>> Huffman::HuffmanCode::orderedSymbols()
+{
+    std::vector<std::vector<int>> ret;
+    for (auto it = decode.begin(); it != decode.end(); it++) {
+        std::map<int, int>& m = *it;
+        std::vector<int> syms;
+        for (auto it2 = m.begin(); it2 != m.end(); it2++) {
+            syms.push_back(it2->second);
+        }
+        ret.push_back(syms);
+    }
+    return ret;
+}
+
 const char* Huffman::HuffmanException::what()
 {
     return ("Huffman Exception: " + message).c_str();

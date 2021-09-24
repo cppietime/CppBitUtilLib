@@ -28,10 +28,11 @@ endif
 
 INC_FLAG = -Iinclude
 
+NAME = bitutil
 SRCS = $(wildcard src/*.cpp)
 OBJS = $(patsubst src/%.cpp,obj/%.o,$(SRCS))
-SHARED_LIB = build/$(SO_PRE)bitutil$(SO_EXT)
-STATIC_LIB = build/libbitutil.a
+SHARED_LIB = build/$(SO_PRE)$(NAME)$(SO_EXT)
+STATIC_LIB = build/lib$(NAME).a
 HEADERS = $(wildcard include/*.hpp)
 
 .PHONY: shared
