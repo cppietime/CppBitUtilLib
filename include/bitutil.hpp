@@ -87,6 +87,13 @@ namespace BitBuffer {
             size_t writeData(const unsigned char *mem, size_t bytes);
             
             /*
+            Write encoded UTF-8
+            
+            returns the number of bytes written
+            */
+            size_t writeUtf8(std::uint32_t value);
+            
+            /*
             Flushes anything left in the buffer
             
             fill: If true, empty space is filled with 1-bits instead of 0-bits
@@ -128,6 +135,11 @@ namespace BitBuffer {
             bytes: Number of bytes to read
             */
             size_t read(unsigned char *mem, size_t bytes);
+            
+            /*
+            Reads and returns the following UTF-8 value or throws BitBufferException
+            */
+            std::uint32_t readUtf8();
     };
     
     /* Thrown when invalid arguments or state arise for bit ops */
@@ -292,6 +304,34 @@ namespace BitManip {
         number = ((number & 0xCC) >> 2) | ((number & 0x33) << 2);
         number = ((number & 0xAA) >> 1) | ((number & 0x55) << 1);
         return number;
+    }
+    
+#define UTF8_MAX_LEN 6
+    
+    /*
+    Convert an integer to the UTF-8 representation
+    
+    returns the number of bytes needed to represent v
+    */
+    size_t utf8(std::uint32_t v, std::uint8_t *dst);
+    
+    /*
+    Convert UTF-8 to a single integer
+    
+    returns the number of bytes used, 0 for failure
+    */
+    size_t utf8(std::uint8_t *src, std::uint32_t &v);
+    
+    /*
+    Given a first UTF-8 byte, how many more are there for this codepoint?
+    */
+    inline size_t utf8BytesLeft(std::uint8_t firstByte)
+    {
+        size_t firstZero = msbSet((std::uint8_t)~firstByte);
+        if (firstZero == 7) {
+            return 0;
+        }
+        return 6 - firstZero;
     }
     
 }

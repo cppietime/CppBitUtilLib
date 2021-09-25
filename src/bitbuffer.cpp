@@ -62,6 +62,17 @@ size_t BitBuffer::BitBufferOut::writeData(const unsigned char *mem, size_t bytes
     return written;
 }
 
+size_t BitBuffer::BitBufferOut::writeUtf8(std::uint32_t value)
+{
+    size_t written = 0;
+    std::uint8_t buffer[UTF8_MAX_LEN];
+    size_t size = BitManip::utf8(value, buffer);
+    for (size_t i = 0; i < size; i++) {
+        written += write(buffer[i], 8);
+    }
+    return written;
+}
+
 size_t BitBuffer::BitBufferOut::flush(bool fill)
 {
     if (index == 0) {
@@ -115,41 +126,26 @@ size_t BitBuffer::BitBufferIn::read(unsigned char *mem, size_t bytes)
     return bytes;
 }
 
+std::uint32_t BitBuffer::BitBufferIn::readUtf8()
+{
+    std::uint8_t buffer[UTF8_MAX_LEN];
+    buffer[0] = read(8);
+    size_t bytesLeft = BitManip::utf8BytesLeft(buffer[0]);
+    if (bytesLeft > 5) {
+        throw BitBufferException("Invalid UTF-8 sequence encountered");
+    }
+    for (size_t i = 0; i < bytesLeft; i++) {
+        buffer[i + 1] = read(8);
+    }
+    std::uint32_t codepoint;
+    size_t success = BitManip::utf8(buffer, codepoint);
+    if (success == 0) {
+        throw BitBufferException("Invalid UTF-8 sequence encountered");
+    }
+    return codepoint;
+}
+
 const char* BitBuffer::BitBufferException::what()
 {
     return ("BitBuffer Exception: " + message).c_str();
 }
-
-// int main()
-// {
-    // std::map<int, int> freqs;
-    // freqs[0] = 20;
-    // freqs[1] = 5;
-    // freqs[2] = 12;
-    // freqs[3] = 1;
-    // freqs[4] = 8;
-    // Huffman::HuffmanCode code(freqs);
-    // std::stringstream stream;
-    // BitBuffer::BitBufferOut bout(stream, BitBuffer::LSB);
-    // const int message[6] = {0, 4, 2, 3, 1, 4};
-    // for (size_t i = 0; i < 6; i++) {
-        // code.write(message[i], bout);
-    // }
-    // bout.flush();
-    // stream.seekg(0);
-    // std::cout << "State: " << stream.rdstate() << std::endl;
-    // std::string str = stream.str();
-    // for (size_t i = 0; i < str.size(); i++) {
-        // std::cout << i << ": " << (int)(unsigned char)str.data()[i] << std::endl;
-    // }
-    // BitBuffer::BitBufferIn bin(stream, BitBuffer::LSB);
-    // int sym;
-    // for (size_t i = 0; i < 6; i++) {
-        // if (code.read(bin, sym)) {
-            // std::cout << sym << std::endl;
-        // } else {
-            // std::cout << "No code found...\n";
-        // }
-    // }
-    // return 0;
-// }
