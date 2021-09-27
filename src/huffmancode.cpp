@@ -153,7 +153,7 @@ void Huffman::HuffmanCode::initFromList(std::vector<std::vector<int>>& symbolLis
     // }
 }
 
-bool Huffman::HuffmanCode::write(int symbol, int& code, size_t& length)
+bool Huffman::HuffmanCode::write(int symbol, int& code, size_t& length) const
 {
     auto it = encode.find(symbol);
     if (it == encode.end()) {
@@ -164,7 +164,7 @@ bool Huffman::HuffmanCode::write(int symbol, int& code, size_t& length)
     return true;
 }
 
-bool Huffman::HuffmanCode::write(int symbol, BitBuffer::BitBufferOut& buffer)
+bool Huffman::HuffmanCode::write(int symbol, BitBuffer::BitBufferOut& buffer) const
 {
     int code;
     size_t length;
@@ -177,7 +177,7 @@ bool Huffman::HuffmanCode::write(int symbol, BitBuffer::BitBufferOut& buffer)
     return true;
 }
 
-bool Huffman::HuffmanCode::read(int code, size_t length, int& symbol)
+bool Huffman::HuffmanCode::read(int code, size_t length, int& symbol) const
 {
     if (length > decode.size() || length == 0) {
         return false;
@@ -191,7 +191,7 @@ bool Huffman::HuffmanCode::read(int code, size_t length, int& symbol)
     return true;
 }
 
-bool Huffman::HuffmanCode::read(BitBuffer::BitBufferIn& buffer, int& output)
+bool Huffman::HuffmanCode::read(BitBuffer::BitBufferIn& buffer, int& output) const
 {
     int code = 0;
     for (size_t length = 1; length <= decode.size(); length++) {
@@ -204,7 +204,7 @@ bool Huffman::HuffmanCode::read(BitBuffer::BitBufferIn& buffer, int& output)
     return false;
 }
 
-std::vector<size_t> Huffman::HuffmanCode::lengthCounts()
+std::vector<size_t> Huffman::HuffmanCode::lengthCounts() const
 {
     std::vector<size_t> ret;
     for (auto it = decode.begin(); it != decode.end(); it++) {
@@ -213,11 +213,11 @@ std::vector<size_t> Huffman::HuffmanCode::lengthCounts()
     return ret;
 }
 
-std::vector<std::vector<int>> Huffman::HuffmanCode::orderedSymbols()
+std::vector<std::vector<int>> Huffman::HuffmanCode::orderedSymbols() const
 {
     std::vector<std::vector<int>> ret;
     for (auto it = decode.begin(); it != decode.end(); it++) {
-        std::map<int, int>& m = *it;
+        const std::map<int, int>& m = *it;
         std::vector<int> syms;
         for (auto it2 = m.begin(); it2 != m.end(); it2++) {
             syms.push_back(it2->second);

@@ -65,7 +65,7 @@ size_t BitBuffer::BitBufferOut::writeData(const unsigned char *mem, size_t bytes
 size_t BitBuffer::BitBufferOut::writeUtf8(std::uint32_t value)
 {
     size_t written = 0;
-    std::uint8_t buffer[UTF8_MAX_LEN];
+    std::uint8_t buffer[BitManip::UTF8_MAX_LEN];
     size_t size = BitManip::utf8(value, buffer);
     for (size_t i = 0; i < size; i++) {
         written += write(buffer[i], 8);
@@ -84,6 +84,7 @@ size_t BitBuffer::BitBufferOut::flush(bool fill)
         building |= (1 << remaining) - 1;
     }
     push();
+    index = 0;
     return 1;
 }
 
@@ -128,7 +129,7 @@ size_t BitBuffer::BitBufferIn::read(unsigned char *mem, size_t bytes)
 
 std::uint32_t BitBuffer::BitBufferIn::readUtf8()
 {
-    std::uint8_t buffer[UTF8_MAX_LEN];
+    std::uint8_t buffer[BitManip::UTF8_MAX_LEN];
     buffer[0] = read(8);
     size_t bytesLeft = BitManip::utf8BytesLeft(buffer[0]);
     if (bytesLeft > 5) {

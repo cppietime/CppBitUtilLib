@@ -101,6 +101,20 @@ namespace BitBuffer {
             returns the number of bytes actually written to the underlying stream
             */
             size_t flush(bool fill = false);
+            
+            template <class T>
+            inline BitBufferOut& operator<<(std::vector<T> vec)
+            {
+                writeData(reinterpret_cast<const unsigned char*>(vec.data()), vec.size() * sizeof(T));
+                return *this;
+            }
+            
+            template <class T>
+            inline BitBufferOut& operator<<(T value)
+            {
+                write(value, sizeof(T) * 8);
+                return *this;
+            }
     };
     
     class BitBufferIn {
@@ -306,7 +320,8 @@ namespace BitManip {
         return number;
     }
     
-#define UTF8_MAX_LEN 6
+// #define UTF8_MAX_LEN 6
+    constexpr int UTF8_MAX_LEN = 6;
     
     /*
     Convert an integer to the UTF-8 representation
@@ -371,7 +386,7 @@ namespace Huffman {
             length out: Number of bits in code to write
             returns true if a code was found to match symbol
             */
-            bool write(int symbol, int& code, size_t& length);
+            bool write(int symbol, int& code, size_t& length) const;
             
             /*
             Write a symbol to a BitBufferOut
@@ -380,7 +395,7 @@ namespace Huffman {
             buffer: Output buffer to write to
             returns true if a code was found
             */
-            bool write(int symbol, BitBuffer::BitBufferOut& buffer);
+            bool write(int symbol, BitBuffer::BitBufferOut& buffer) const;
             
             /*
             Find the symbol that matches a code and length
@@ -390,7 +405,7 @@ namespace Huffman {
             output out: Found matching symbol
             returns true if a match was found
             */
-            bool read(int code, size_t length, int& output);
+            bool read(int code, size_t length, int& output) const;
             
             /*
             Read the next symbol from a bit input
@@ -399,17 +414,17 @@ namespace Huffman {
             output out: Matched symbol if any
             returns true if a symbol was found
             */
-            bool read(BitBuffer::BitBufferIn& buffer, int& output);
+            bool read(BitBuffer::BitBufferIn& buffer, int& output) const;
             
             /*
             returns a vector of the number of symbols of each code length
             */
-            std::vector<size_t> lengthCounts();
+            std::vector<size_t> lengthCounts() const;
             
             /*
             returns the symbols in order of each length
             */
-            std::vector<std::vector<int>> orderedSymbols();
+            std::vector<std::vector<int>> orderedSymbols() const;
     };
     
     /*
@@ -421,6 +436,112 @@ namespace Huffman {
         public:
             HuffmanException(std::string message) : message{message} {}
             virtual const char* what();
+    };
+    
+}
+
+namespace Digest {
+    
+    std::uint8_t crc8_base(const std::uint8_t *data, size_t n, std::uint8_t start = 0);
+    
+    /*
+    Calculate and accumulate the CRC8 of some data
+    
+    data: Pointer to data
+    n: Number of T elements to checksum (number of T, not bytes)
+    start: Starting CRC value, defaults to 0
+    returns the 8-bit CRC8 with polynomial 7
+    */
+    template <class T>
+    inline std::uint8_t crc8(const T *data, size_t n, std::uint8_t start = 0)
+    {
+        return crc8_base(reinterpret_cast<const std::uint8_t*>(data), n * sizeof(T), start);
+    }
+    
+    std::uint16_t crc16_base(const std::uint8_t *data, size_t n, std::uint16_t start = 0);
+    
+    /*
+    Calculate and accumulate the CRC16 of some data
+    
+    data: Pointer to data
+    n: Number of T elements to checksum (number of T, not bytes)
+    start: Starting CRC value, defaults to 0
+    returns the 16-bit CRC16 with polynomial 0x8005
+    */
+    template <class T>
+    std::uint16_t crc16(const T *data, size_t n, std::uint16_t start = 0)
+    {
+        return crc16_base(reinterpret_cast<const std::uint8_t*>(data), n * sizeof(T), start);
+    }
+    
+    template <class T>
+    inline std::uint8_t crc8(const std::vector<T>& vec, std::uint8_t start = 0)
+    {
+        return crc8(vec.data(), vec.size(), start);
+    }
+    
+    template <class T>
+    inline std::uint16_t crc16(const std::vector<T>& vec, std::uint16_t start = 0)
+    {
+        return crc16(vec.data(), vec.size(), start);
+    }
+    
+    constexpr size_t MD5_BUFFER_SIZE = 16;
+    constexpr std::uint32_t MD5_A = 0x67452301;
+    constexpr std::uint32_t MD5_B = 0xefcdab89;
+    constexpr std::uint32_t MD5_C = 0x98badcfe;
+    constexpr std::uint32_t MD5_D = 0x10325476;
+    
+    /*
+    An object to accumulate data to produce an MD5 digest
+    */
+    class MD5Context {
+        private:
+            size_t bytesProcessed;
+            size_t bufferIndex;
+            std::uint32_t a, b, c, d;
+            std::uint32_t buffer[MD5_BUFFER_SIZE];
+            void processBuffer();
+        public:
+            MD5Context() :
+                bytesProcessed{0},
+                bufferIndex{0},
+                buffer{0},
+                a {MD5_A},
+                b {MD5_B},
+                c {MD5_C},
+                d {MD5_D} {}
+            
+            /*
+            Take in arbitrary data and process it
+            */
+            template <class T>
+            inline void consume(const T *data, size_t n)
+            {
+                consume(reinterpret_cast<const std::uint8_t*>(data), n * sizeof(T));
+            }
+            
+            void consume(const std::uint8_t *data, size_t n);
+            
+            /*
+            Consume a single byte
+            */
+            MD5Context& operator<<(std::uint8_t byte);
+            
+            /*
+            Consume a vector of arbitrary type
+            */
+            template <class T>
+            inline MD5Context& operator<<(const std::vector<T>& vec)
+            {
+                consume(vec.data(), vec.size());
+                return *this;
+            }
+            
+            /*
+            Finalize remaining data and metadata and return the MD5 digest
+            */
+            std::vector<std::uint8_t> finalize();
     };
     
 }
