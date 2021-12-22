@@ -8,7 +8,7 @@ md5.cpp
 
 #include <cstdint>
 #include <algorithm>
-#include <endian.h>
+// #include <endian.h>
 #include "bitutil.hpp"
 
 #define MD5_SIN_SIZE 64
@@ -98,20 +98,36 @@ Digest::MD5Context& Digest::MD5Context::operator<<(std::uint8_t byte)
 
 std::vector<std::uint8_t> Digest::MD5Context::finalize()
 {
-    std::uint64_t bits = htole64(bytesProcessed << 3);
+    // std::uint64_t bits = htole64(bytesProcessed << 3);
+    std::uint8_t bits[8] = {
+        (std::uint8_t)(bytesProcessed << 3),
+        (std::uint8_t)(bytesProcessed >> 5),
+        (std::uint8_t)(bytesProcessed >> 13),
+        (std::uint8_t)(bytesProcessed >> 21),
+        (std::uint8_t)(bytesProcessed >> 29),
+        (std::uint8_t)(bytesProcessed >> 37),
+        (std::uint8_t)(bytesProcessed >> 45),
+        (std::uint8_t)(bytesProcessed >> 53)
+    };
     operator<<(0x80);
     while (bufferIndex != 56) {
         operator<<(0x00);
     }
-    consume(&bits, sizeof(std::uint64_t));
-    std::uint32_t words[4] = {
-        htole32(a),
-        htole32(b),
-        htole32(c),
-        htole32(d)
+    consume(bits, sizeof(std::uint64_t));
+    // std::uint32_t words[4] = {
+        // htole32(a),
+        // htole32(b),
+        // htole32(c),
+        // htole32(d)
+    // };
+    // const std::uint8_t *asBytes = reinterpret_cast<const std::uint8_t*>(words);
+    // return std::vector<std::uint8_t>(asBytes, asBytes + 16);
+    return {
+        (std::uint8_t)(a >> 0), (std::uint8_t)(a >> 8), (std::uint8_t)(a >> 16), (std::uint8_t)(a >> 24),
+        (std::uint8_t)(b >> 0), (std::uint8_t)(b >> 8), (std::uint8_t)(b >> 16), (std::uint8_t)(b >> 24),
+        (std::uint8_t)(c >> 0), (std::uint8_t)(c >> 8), (std::uint8_t)(c >> 16), (std::uint8_t)(c >> 24),
+        (std::uint8_t)(d >> 0), (std::uint8_t)(d >> 8), (std::uint8_t)(d >> 16), (std::uint8_t)(d >> 24),
     };
-    const std::uint8_t *asBytes = reinterpret_cast<const std::uint8_t*>(words);
-    return std::vector<std::uint8_t>(asBytes, asBytes + 16);
 }
 
 // int main()

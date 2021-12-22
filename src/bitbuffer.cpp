@@ -27,6 +27,7 @@ void BitBuffer::BitBufferOut::push()
         building = ((building & 0xAA) >> 1) | ((building & 0x55) << 1);
     }
     stream.write(reinterpret_cast<const char*>(&building), sizeof(BITBUFFER_T));
+    stream.flush();
 }
 
 size_t BitBuffer::BitBufferOut::write(std::uint32_t value, size_t bits)

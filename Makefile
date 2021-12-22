@@ -5,6 +5,10 @@ AR := ar
 PREFIX := /usr/local
 SO_EXT := .so
 
+ifeq ($(OS), Windows_NT)
+PLATFORM := mingw
+endif
+
 ifeq ($(BITS),32)
 BIT_FLAG := -m32
 endif
